@@ -17,7 +17,7 @@ func check(r sql.Result, err error) {
 	}
 }
 
-func InitDb(name, schema string, clean bool) *sql.DB {
+func InitDb(name, schema string, clean, index bool) *sql.DB {
 	db, err := sql.Open("postgres", "dbname=postgres sslmode=disable")
 	exitIf("open db", err)
 
@@ -34,6 +34,10 @@ func InitDb(name, schema string, clean bool) *sql.DB {
 	check(db.Exec("CREATE SCHEMA IF NOT EXISTS " + schema))
 	check(db.Exec("CREATE EXTENSION IF NOT EXISTS hstore"))
 	check(db.Exec("CREATE TABLE IF NOT EXISTS " + schema + ".people (id serial PRIMARY KEY, internal varchar UNIQUE, external varchar UNIQUE, attributes hstore, memberships hstore)"))
+
+	if index {
+		check(db.Exec("CREATE INDEX attrs_index on " + schema + ".people using gin(attributes)"))
+	}
 
 	return db
 }

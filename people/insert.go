@@ -76,7 +76,7 @@ func Insert(db *sql.DB, schema string, count, attributes, segments int) {
 				status = "left|"
 			}
 
-			p.attributes[strconv.Itoa(j)] = sql.NullString{status + strconv.Itoa(int(time.Now().Unix())-rand.Intn(24*60*60)), true}
+			p.memberships[strconv.Itoa(j)] = sql.NullString{status + strconv.Itoa(int(time.Now().Unix())-rand.Intn(24*60*60)), true}
 		}
 
 		batch = append(batch, p)
