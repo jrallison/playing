@@ -22,3 +22,9 @@ Inserting a million people with 50 attributes and 200 segments
 
 time: ~40:00 (~384 inserts per second)
 ~10 GB disk space (du -sh /usr/local/var/postgres)
+
+Querying:
+
+Count number of people with existance of (attr49 AND attr48) OR attr47 OR attr46
+--------------------------------------------------------------------------------
+select count(*) from test.people where (attributes ? 'attr49' AND attributes ? 'attr48') OR (attributes ? 'attr47') OR (attributes ? 'attr46');
