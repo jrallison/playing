@@ -20,8 +20,8 @@ Inserting with GIN index on attributes
 Inserting a million people with 50 attributes and 200 segments
 (transactional batching of 100 inserts per transaction)
 
-time: ~40:00 (~384 inserts per second)
-~10 GB disk space (du -sh /usr/local/var/postgres)
+time: ~43:20 (~384 inserts per second)
+~9.7 GB disk space (du -sh /usr/local/var/postgres)
 
 Querying:
 
