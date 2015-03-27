@@ -51,6 +51,7 @@ func Insert(db *sql.DB, schema string, count, attributes, segments int) {
 		exitIf("commit transaction", tx.Commit())
 	}
 
+	start := time.Now()
 	batch := make([]person, 0, 100)
 
 	for i := 0; i < count; i++ {
@@ -88,4 +89,6 @@ func Insert(db *sql.DB, schema string, count, attributes, segments int) {
 	}
 
 	insert(batch)
+
+	log.Println("inserted", count, "persons in", time.Since(start))
 }
