@@ -12,16 +12,9 @@ import (
 )
 
 func Insert(db *sql.DB, schemas, count, attributes, segments int) {
-	type person struct {
-		internal    string
-		external    string
-		attributes  map[string]sql.NullString
-		memberships map[string]sql.NullString
-	}
+	var insert func(string, []Person)
 
-	var insert func(string, []person)
-
-	insert = func(schema string, people []person) {
+	insert = func(schema string, people []Person) {
 		if len(people) == 0 {
 			return
 		}
@@ -38,7 +31,18 @@ func Insert(db *sql.DB, schemas, count, attributes, segments int) {
 				query += ", "
 			}
 
-			args = append(args, person.internal, person.external, hstore.Hstore{person.attributes}, hstore.Hstore{person.memberships})
+			attrs := make(map[string]sql.NullString)
+			memberships := make(map[string]sql.NullString)
+
+			for n, v := range person.Attributes {
+				attrs[n] = sql.NullString{v, true}
+			}
+
+			for n, v := range person.Memberships {
+				memberships[n] = sql.NullString{v, true}
+			}
+
+			args = append(args, person.Internal, person.External, hstore.Hstore{attrs}, hstore.Hstore{memberships})
 		}
 
 		r, err := db.Exec(query, args...)
@@ -51,40 +55,22 @@ func Insert(db *sql.DB, schemas, count, attributes, segments int) {
 		exitIf("commit transaction", tx.Commit())
 	}
 
+	i := 0
 	start := time.Now()
-	batch := make([]person, 0, 100)
+	batch := make([]Person, 0, 100)
 
-	for i := 0; i < count; i++ {
+	for p := range Generate(count, attributes, segments) {
+		i += 1
+
 		if i%10000 == 0 {
 			log.Println("inserting person", i)
-		}
-
-		p := person{
-			"i" + strconv.Itoa(i),
-			"e" + strconv.Itoa(i),
-			make(map[string]sql.NullString),
-			make(map[string]sql.NullString),
-		}
-
-		for j := 0; j < attributes; j++ {
-			p.attributes["attr"+strconv.Itoa(j)] = sql.NullString{"value" + strconv.Itoa(rand.Intn(attributes*10)), true}
-		}
-
-		for j := 0; j < segments; j++ {
-			status := "entered|"
-
-			if rand.Intn(2) == 0 {
-				status = "left|"
-			}
-
-			p.memberships[strconv.Itoa(j)] = sql.NullString{status + strconv.Itoa(int(time.Now().Unix())-rand.Intn(24*60*60)), true}
 		}
 
 		batch = append(batch, p)
 
 		if len(batch) >= 100 {
 			insert(randomSchema(schemas), batch)
-			batch = make([]person, 0, 100)
+			batch = make([]Person, 0, 100)
 		}
 	}
 
