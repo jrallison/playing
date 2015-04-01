@@ -4,7 +4,7 @@ import (
 	"flag"
 	"log"
 
-	"github.com/jrallison/playingwithpostgres/people"
+	"github.com/jrallison/playing/people"
 	_ "github.com/lib/pq"
 )
 
