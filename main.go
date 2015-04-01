@@ -9,7 +9,7 @@ import (
 )
 
 var dbname = flag.String("db", "", "name of database")
-var schema = flag.String("schema", "test", "database schema name (defaults to 'test')")
+var schemas = flag.Int("schemas", 1, "number of database schemas (defaults to 1)")
 var clean = flag.Bool("clean", false, "drop database before starting (defaults to false)")
 var index = flag.Bool("index", false, "whether or not to create full text indexes for attributes/segments (defaults to false)")
 var count = flag.Int("count", 1000000, "number of people to insert (defaults to 1,000,000)")
@@ -23,6 +23,6 @@ func main() {
 		log.Fatal("Must provide at least a database name")
 	}
 
-	db := people.InitDb(*dbname, *schema, *clean, *index)
-	people.Insert(db, *schema, *count, *attributes, *segments)
+	db := people.InitDb(*dbname, *schemas, *clean, *index)
+	people.Insert(db, *schemas, *count, *attributes, *segments)
 }

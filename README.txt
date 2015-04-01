@@ -15,6 +15,14 @@ Inserting a million people with 20 attributes and 50 segments
 time: 4:38 (~3597 inserts per second)
 2.2 GB disk space (du -sh /usr/local/var/postgres)
 
+Simple inserting with 0 indexes & 1000 schemas
+----------------------------------------------
+Inserting a million people with 20 attributes and 50 segments
+(transactional batching of 100 inserts per transaction)
+
+time: 4:44 (~3521 inserts per second)
+2.5 GB disk space (du -sh /usr/local/var/postgres)
+
 Inserting with GIN index on attributes
 --------------------------------------
 Inserting a million people with 50 attributes and 200 segments

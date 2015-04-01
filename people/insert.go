@@ -11,7 +11,7 @@ import (
 	"github.com/lib/pq/hstore"
 )
 
-func Insert(db *sql.DB, schema string, count, attributes, segments int) {
+func Insert(db *sql.DB, schemas, count, attributes, segments int) {
 	type person struct {
 		internal    string
 		external    string
@@ -19,9 +19,9 @@ func Insert(db *sql.DB, schema string, count, attributes, segments int) {
 		memberships map[string]sql.NullString
 	}
 
-	var insert func([]person)
+	var insert func(string, []person)
 
-	insert = func(people []person) {
+	insert = func(schema string, people []person) {
 		if len(people) == 0 {
 			return
 		}
@@ -83,12 +83,16 @@ func Insert(db *sql.DB, schema string, count, attributes, segments int) {
 		batch = append(batch, p)
 
 		if len(batch) >= 100 {
-			insert(batch)
+			insert(randomSchema(schemas), batch)
 			batch = make([]person, 0, 100)
 		}
 	}
 
-	insert(batch)
+	insert(randomSchema(schemas), batch)
 
 	log.Println("inserted", count, "persons in", time.Since(start))
+}
+
+func randomSchema(n int) string {
+	return "s" + strconv.Itoa(rand.Intn(n))
 }

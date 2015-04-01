@@ -3,6 +3,7 @@ package people
 import (
 	"database/sql"
 	"log"
+	"strconv"
 )
 
 func exitIf(context string, err error) {
@@ -17,7 +18,7 @@ func check(r sql.Result, err error) {
 	}
 }
 
-func InitDb(name, schema string, clean, index bool) *sql.DB {
+func InitDb(name string, schemas int, clean, index bool) *sql.DB {
 	db, err := sql.Open("postgres", "dbname=postgres sslmode=disable")
 	exitIf("open db", err)
 
@@ -31,12 +32,16 @@ func InitDb(name, schema string, clean, index bool) *sql.DB {
 	db, err = sql.Open("postgres", "dbname="+name+" sslmode=disable")
 	exitIf("open db", err)
 
-	check(db.Exec("CREATE SCHEMA IF NOT EXISTS " + schema))
-	check(db.Exec("CREATE EXTENSION IF NOT EXISTS hstore"))
-	check(db.Exec("CREATE TABLE IF NOT EXISTS " + schema + ".people (id serial PRIMARY KEY, internal varchar UNIQUE, external varchar UNIQUE, attributes hstore, memberships hstore)"))
+	for i := 0; i < schemas; i++ {
+		schema := "s" + strconv.Itoa(i)
 
-	if index {
-		check(db.Exec("CREATE INDEX attrs_index on " + schema + ".people using gin(attributes)"))
+		check(db.Exec("CREATE SCHEMA IF NOT EXISTS " + schema))
+		check(db.Exec("CREATE EXTENSION IF NOT EXISTS hstore"))
+		check(db.Exec("CREATE TABLE IF NOT EXISTS " + schema + ".people (id serial PRIMARY KEY, internal varchar UNIQUE, external varchar UNIQUE, attributes hstore, memberships hstore)"))
+
+		if index {
+			check(db.Exec("CREATE INDEX attrs_index on " + schema + ".people using gin(attributes)"))
+		}
 	}
 
 	return db
