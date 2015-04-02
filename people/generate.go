@@ -26,7 +26,7 @@ func Generate(count, attrs, segments int) <-chan Person {
 			}
 
 			for j := 0; j < attrs; j++ {
-				p.Attributes["attr"+strconv.Itoa(j)] = "value" + p.External + strconv.Itoa(rand.Intn(attrs*10))
+				p.Attributes["attr"+strconv.Itoa(j)] = "value" + strconv.Itoa(rand.Intn(attrs*10))
 			}
 
 			for j := 0; j < segments; j++ {
