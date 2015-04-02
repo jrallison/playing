@@ -37,11 +37,13 @@ func InitDb(name string, schemas int, clean, index bool) *sql.DB {
 
 		check(db.Exec("CREATE SCHEMA IF NOT EXISTS " + schema))
 		check(db.Exec("CREATE EXTENSION IF NOT EXISTS hstore"))
-		check(db.Exec("CREATE TABLE IF NOT EXISTS " + schema + ".people (id serial PRIMARY KEY, internal varchar UNIQUE, external varchar UNIQUE, attributes hstore, memberships hstore)"))
+		check(db.Exec("CREATE TABLE IF NOT EXISTS " + schema + ".people (id serial PRIMARY KEY, internal varchar UNIQUE, external varchar UNIQUE)"))
+		check(db.Exec("CREATE TABLE IF NOT EXISTS " + schema + ".attributes (id integer references " + schema + ".people ON DELETE CASCADE, name varchar, value varchar, timestamp integer, PRIMARY KEY (id, name))"))
+		check(db.Exec("CREATE TABLE IF NOT EXISTS " + schema + ".segments (id integer references " + schema + ".people ON DELETE CASCADE, segment_id integer, member boolean, timestamp integer, PRIMARY KEY (id, segment_id))"))
 
 		if index {
-			check(db.Exec("CREATE INDEX attrs_index on " + schema + ".people using gin(attributes)"))
-			check(db.Exec("CREATE INDEX attrs0_index ON " + schema + ".people using btree((attributes->'attr0'))"))
+			check(db.Exec("CREATE INDEX attrs_idx on " + schema + ".attributes (id, name, value)"))
+			check(db.Exec("CREATE INDEX segs_idx ON " + schema + ".segments (id, segment_id, member, timestamp)"))
 		}
 	}
 

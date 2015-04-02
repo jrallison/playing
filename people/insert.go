@@ -6,9 +6,8 @@ import (
 	"log"
 	"math/rand"
 	"strconv"
+	"strings"
 	"time"
-
-	"github.com/lib/pq/hstore"
 )
 
 func Insert(db *sql.DB, schemas, count, attributes, segments int) {
@@ -22,34 +21,53 @@ func Insert(db *sql.DB, schemas, count, attributes, segments int) {
 		tx, err := db.Begin()
 		exitIf("start transaction", err)
 
-		query := "INSERT INTO " + schema + ".people (internal, external, attributes, memberships) VALUES "
-		args := make([]interface{}, 0, len(people)*4)
+		query1 := "INSERT INTO " + schema + ".people (internal, external) VALUES "
+		args1 := make([]interface{}, 0, len(people)*2)
 
 		for i, person := range people {
-			query += fmt.Sprint("($", i*4+1, ", $", i*4+2, ", $", i*4+3, ", $", i*4+4, ")")
-			if i != len(people)-1 {
-				query += ", "
-			}
+			query1 += fmt.Sprint("($", i*2+1, ", $", i*2+2, "), ")
+			args1 = append(args1, person.Internal, person.External)
+		}
 
-			attrs := make(map[string]sql.NullString)
-			memberships := make(map[string]sql.NullString)
+		var firstid int
+		err = tx.QueryRow(strings.TrimSuffix(query1, ", ")+" RETURNING id", args1...).Scan(&firstid)
+		exitIf("inserting people", err)
 
+		aCount := 0
+		query2 := "INSERT INTO " + schema + ".attributes (id, name, value, timestamp) VALUES "
+		args2 := make([]interface{}, 0, len(people)*attributes*4)
+
+		sCount := 0
+		query3 := "INSERT INTO " + schema + ".segments (id, segment_id, member, timestamp) VALUES "
+		args3 := make([]interface{}, 0, len(people)*segments*3)
+
+		for i, person := range people {
 			for n, v := range person.Attributes {
-				attrs[n] = sql.NullString{v, true}
+				query2 += fmt.Sprint("($", aCount*4+1, ", $", aCount*4+2, ", $", aCount*4+3, ", $", aCount*4+4, "), ")
+				args2 = append(args2, firstid+i, n, v, int(time.Now().Unix()))
+				aCount += 1
 			}
 
 			for n, v := range person.Memberships {
-				memberships[n] = sql.NullString{v, true}
-			}
+				parts := strings.SplitN(v, "|", 2)
+				member := parts[0] == "entered"
+				ts, _ := strconv.Atoi(parts[1])
+				id, _ := strconv.Atoi(n)
 
-			args = append(args, person.Internal, person.External, hstore.Hstore{attrs}, hstore.Hstore{memberships})
+				query3 += fmt.Sprint("($", sCount*4+1, ", $", sCount*4+2, ", $", sCount*4+3, ", $", sCount*4+4, "), ")
+				args3 = append(args3, firstid+i, id, member, ts)
+				sCount += 1
+			}
 		}
 
-		r, err := db.Exec(query, args...)
-		exitIf("inserting people", err)
+		if len(args2) > 0 {
+			_, err = tx.Exec(strings.TrimSuffix(query2, ", "), args2...)
+			exitIf("inserting attributes", err)
+		}
 
-		if num, _ := r.RowsAffected(); num != int64(len(people)) {
-			log.Fatal("insert didn't insert?", r)
+		if len(args3) > 0 {
+			_, err = tx.Exec(strings.TrimSuffix(query3, ", "), args3...)
+			exitIf("inserting segments", err)
 		}
 
 		exitIf("commit transaction", tx.Commit())
