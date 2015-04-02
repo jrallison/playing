@@ -40,8 +40,8 @@ func InitDb(name string, schemas int, clean, index bool) *sql.DB {
 		check(db.Exec("CREATE TABLE IF NOT EXISTS " + schema + ".people (id serial PRIMARY KEY, internal varchar UNIQUE, external varchar UNIQUE, attributes hstore, memberships hstore)"))
 
 		if index {
-			check(db.Exec("CREATE OR REPLACE FUNCTION hstore_text(hstore) RETURNS text LANGUAGE sql IMMUTABLE AS $$ SELECT string_agg(key || '-' || value, ' ') from each($1) $$;"))
-			check(db.Exec("CREATE INDEX attrs_index on " + schema + ".people using gin(to_tsvector('english', hstore_text(attributes)))"))
+			check(db.Exec("CREATE INDEX attrs_index on " + schema + ".people using gin(attributes)"))
+			check(db.Exec("CREATE INDEX attrs0_index ON " + schema + ".people using btree((attributes->'attr0'))"))
 		}
 	}
 
