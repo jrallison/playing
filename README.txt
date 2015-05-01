@@ -37,6 +37,13 @@ Inserting a million people with 20 attributes and 50 segments
 time: 14:10 (~1176 inserts per second)
 ~3.2 GB disk space (du -sh /usr/local/var/postgres)
 
+Adding segment membership with GIN index on memberships
+-------------------------------------------------------
+Adding key to memberships hstore to 3 million people
+(transactional batching of 100 updates per transaction)
+
+time: 1:18:00 (~641 inserts per second)
+
 Querying examples:
 ------------------
 
