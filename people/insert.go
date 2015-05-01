@@ -11,6 +11,7 @@ import (
 	"github.com/lib/pq/hstore"
 )
 
+// Insert generates 'count' people and inserts them into the people table.
 func Insert(db *sql.DB, schemas, count, attributes, segments int) {
 	var insert func(string, []Person)
 
@@ -39,7 +40,7 @@ func Insert(db *sql.DB, schemas, count, attributes, segments int) {
 			}
 
 			for n, v := range person.Memberships {
-				memberships[n] = sql.NullString{v, true}
+				memberships[n] = sql.NullString{strconv.Itoa(v), true}
 			}
 
 			args = append(args, person.Internal, person.External, hstore.Hstore{attrs}, hstore.Hstore{memberships})
@@ -60,7 +61,7 @@ func Insert(db *sql.DB, schemas, count, attributes, segments int) {
 	batch := make([]Person, 0, 100)
 
 	for p := range Generate(count, attributes, segments) {
-		i += 1
+		i++
 
 		if i%10000 == 0 {
 			log.Println("inserting person", i)

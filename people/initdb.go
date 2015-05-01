@@ -18,6 +18,7 @@ func check(r sql.Result, err error) {
 	}
 }
 
+// InitDb builds the schema for the database
 func InitDb(name string, schemas int, clean, index bool) *sql.DB {
 	db, err := sql.Open("postgres", "dbname=postgres sslmode=disable")
 	exitIf("open db", err)
@@ -41,7 +42,7 @@ func InitDb(name string, schemas int, clean, index bool) *sql.DB {
 
 		if index {
 			check(db.Exec("CREATE INDEX attrs_index on " + schema + ".people using gin(attributes)"))
-			check(db.Exec("CREATE INDEX attrs0_index ON " + schema + ".people using btree((attributes->'attr0'))"))
+			check(db.Exec("CREATE INDEX members_index on " + schema + ".people using gin(memberships)"))
 		}
 	}
 

@@ -6,13 +6,15 @@ import (
 	"time"
 )
 
+// Person contains generated information about person record
 type Person struct {
 	Internal    int
 	External    string
 	Attributes  map[string]string
-	Memberships map[string]string
+	Memberships map[string]int
 }
 
+// Generate builds 'count' persons based on random data
 func Generate(count, attrs, segments int) <-chan Person {
 	ret := make(chan Person)
 
@@ -22,7 +24,7 @@ func Generate(count, attrs, segments int) <-chan Person {
 				i + 1,
 				"e" + strconv.Itoa(i),
 				make(map[string]string),
-				make(map[string]string),
+				make(map[string]int),
 			}
 
 			for j := 0; j < attrs; j++ {
@@ -36,7 +38,7 @@ func Generate(count, attrs, segments int) <-chan Person {
 					status = "left|"
 				}
 
-				p.Memberships[strconv.Itoa(j)] = status + strconv.Itoa(int(time.Now().Unix())-rand.Intn(24*60*60))
+				p.Memberships[status+strconv.Itoa(j)] = int(time.Now().Unix()) - rand.Intn(24*60*60)
 			}
 
 			ret <- p
